@@ -9,6 +9,7 @@ from tqdm import tqdm
 import random
 from omegaconf import OmegaConf
 import logging
+from pathlib import Path
 
 from models.mobilenetv3 import mobilenetv3_small
 from data_loader.data_loader import UltraMnist
@@ -33,7 +34,11 @@ train_dataloader = DataLoader(train_dataset, batch_size=conf.batch_size, shuffle
 val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers)
 
 
+# ToDo: get weights of the model
 model = mobilenetv3_small().to(device)
+if Path(conf.model_weights).exists():
+    model.load_state_dict(torch.load(conf.model_weights_load))
+    model = model.to(device)
 optimizer = Adam(model.parameters())
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
@@ -49,12 +54,13 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
         else:
             model.eval()
 
-        for batch in ds:
+        for batch in tqdm(ds, desc=f'Phase: {phase}'):
             imgs, labels = batch
-            # print(imgs.shape)
             outs = model(imgs)
-            preds = torch.argmax(outs)
+            preds = torch.argmax(outs, dim=1)
             loss = criterian(outs, labels)
+
+            # tqdm.write(f'shapes: Input: {imgs.shape}, labels: {labels.shape}, outs: {outs.shape}, preds: {preds.shape}')
 
             loss.backward()
             optimizer.step()

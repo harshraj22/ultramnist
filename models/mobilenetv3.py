@@ -128,7 +128,7 @@ class InvertedResidual(nn.Module):
 
 
 class MobileNetV3(nn.Module):
-    def __init__(self, cfgs, mode, num_classes=1000, width_mult=1.):
+    def __init__(self, cfgs, mode, num_classes=28, width_mult=1.):
         super(MobileNetV3, self).__init__()
         # setting of inverted residual blocks
         self.cfgs = cfgs
@@ -136,7 +136,8 @@ class MobileNetV3(nn.Module):
 
         # building first layer
         input_channel = _make_divisible(16 * width_mult, 8)
-        layers = [conv_3x3_bn(3, input_channel, 2)]
+        # image's input channels is being passed here
+        layers = [conv_3x3_bn(1, input_channel, 2)]
         # building inverted residual blocks
         block = InvertedResidual
         for k, t, c, use_se, use_hs, s in self.cfgs:

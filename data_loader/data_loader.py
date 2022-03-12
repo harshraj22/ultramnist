@@ -22,11 +22,13 @@ class UltraMnist(Dataset):
         self.transforms = transforms
 
     def __len__(self):
-        return len(self.data) // 100
+        # ToDo: iterate on full data
+        return len(self.data) // 1000
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
-        image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')).convert('RGB')
+        # ToDo: remove conversion to RGB, modify model
+        image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')) #.convert('RGB')
         if self.transforms:
             image = self.transforms(image)
         return image, torch.tensor(label)
