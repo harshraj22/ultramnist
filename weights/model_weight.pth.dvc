@@ -1,0 +1,4 @@
+outs:
+- md5: 3847e234b12f0bcdabd8b8b9d208682b
+  size: 4568137
+  path: model_weight.pth
