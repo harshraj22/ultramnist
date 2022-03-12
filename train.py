@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torch.optim import Adam
+from torch.optim import AdamW
 
 from PIL import Image 
 from tqdm import tqdm
@@ -36,10 +36,10 @@ val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=Tru
 
 # ToDo: get weights of the model
 model = mobilenetv3_small().to(device)
-if Path(conf.model_weights).exists():
+if Path(conf.model_weights_load).exists():
     model.load_state_dict(torch.load(conf.model_weights_load))
     model = model.to(device)
-optimizer = Adam(model.parameters())
+optimizer = AdamW(model.parameters())
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
 
@@ -65,8 +65,13 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
             loss.backward()
             optimizer.step()
 
+            # tqdm.write(f'preds: {preds}, labels: {labels}, matches: {(preds == labels).sum()}')
+
             running_loss += loss.item() * len(batch)
             running_corrects += (preds == labels).sum()
         # Add code for LR Schedular
         # Log running loss, accuracy
         tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds) :.3f}')
+
+
+torch.save(model.state_dict(), conf.model_weights_save)
