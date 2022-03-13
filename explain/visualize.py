@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import transforms
 
 from captum.attr import IntegratedGradients
@@ -59,7 +60,9 @@ def visualize_integrated_gradients(image_path: str, _transforms: transforms.Comp
 
     out = model(img.unsqueeze(0))
     pred = torch.argmax(out.squeeze(0)).item()
-    print(f'Model predicted: {pred}')
+    conf = torch.max(F.softmax(out.squeeze(0))).item()
+    # print(F.softmax(out.squeeze(0)))
+    print(f'Model predicted: {pred} with conf {conf:.3f}')
 
     integrated_grads = IntegratedGradients(model)
 
@@ -81,7 +84,7 @@ def visualize_integrated_gradients(image_path: str, _transforms: transforms.Comp
 
     dir_name = get_exp_dir()
 
-    result[1].set_title(f'Integrated Grad | Model Pred: {pred}')
+    result[1].set_title(f'Integrated Grad | Model Pred: {pred} | Conf: {conf:.3f}')
 
     result[0].savefig(Path(f'{dir_name}/result1.jpg'))
     result[1].figure.savefig(Path(f'{dir_name}/result2.jpg'))
