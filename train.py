@@ -65,6 +65,7 @@ val_transforms = transforms.Compose([
 df = pd.read_csv(conf.train_csv_path)
 df = df.sample(frac=1, random_state=conf.seed).reset_index(drop=True)
 train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False, random_state=conf.seed)
+val_df.reset_index(drop=True, inplace=True)
 
 train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms)
 val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms)

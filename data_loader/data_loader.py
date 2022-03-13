@@ -15,7 +15,6 @@ class UltraMnist(Dataset):
     def __init__(self, data, image_dir: str, transforms=None):
         super(UltraMnist, self).__init__()
 
-        self.csv_path = csv_path
         self.image_dir = image_dir
 
         self.data = data
