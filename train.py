@@ -28,6 +28,7 @@ conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
+# ToDo: Add augmentations
 _transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Resize((2000, 2000))
@@ -63,6 +64,8 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
             model.eval()
 
         for batch in tqdm(ds, desc=f'Phase: {phase}'):
+            optimizer.zero_grad()
+            
             imgs, labels = batch
             imgs, labels = imgs.to(device), labels.to(device)
             outs = model(imgs)
@@ -70,9 +73,9 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
             loss = criterian(outs, labels)
 
             # tqdm.write(f'shapes: Input: {imgs.shape}, labels: {labels.shape}, outs: {outs.shape}, preds: {preds.shape}')
-
-            loss.backward()
-            optimizer.step()
+            if phase == 'train':
+                loss.backward()
+                optimizer.step()
 
             # tqdm.write(f'preds: {preds}, labels: {labels}, matches: {(preds == labels).sum()}')
 

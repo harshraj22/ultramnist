@@ -136,7 +136,7 @@ class MobileNetV3(nn.Module):
 
         # building first layer
         input_channel = _make_divisible(16 * width_mult, 8)
-        # image's input channels is being passed here
+        # image's input channels is being passed here-----------------------------------
         layers = [conv_3x3_bn(1, input_channel, 2)]
         # building inverted residual blocks
         block = InvertedResidual
