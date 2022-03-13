@@ -32,14 +32,14 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # ToDo: Add augmentations
 train_transforms = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Lambda(lambda t: t/255),
+    transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
     transforms.RandomRotation(10, expand=True),
     transforms.Resize((2000, 2000))
 ])
 
 val_transforms = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Lambda(lambda t: t/255),
+    transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
     transforms.Resize((2000, 2000))
 ])
 

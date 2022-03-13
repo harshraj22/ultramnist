@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
     _transforms = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Lambda(lambda t: t/255),
+        transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
         transforms.Resize((2000, 2000))
     ])
 
