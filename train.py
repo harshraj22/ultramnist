@@ -17,7 +17,7 @@ from data_loader.data_loader import UltraMnist
 
 logging.getLogger().setLevel(logging.INFO)
 
-conf = OmegaConf.load('/kaggle/working/conf/config.yaml')
+conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -56,6 +56,7 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
 
         for batch in tqdm(ds, desc=f'Phase: {phase}'):
             imgs, labels = batch
+            imgs, labels = imgs.to(device), labels.to(device)
             outs = model(imgs)
             preds = torch.argmax(outs, dim=1)
             loss = criterian(outs, labels)
