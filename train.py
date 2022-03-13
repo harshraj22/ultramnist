@@ -109,11 +109,11 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
                 running_corrects += (preds == labels).sum()
         # Add code for LR Schedular
         # Log running loss, accuracy
-        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds) :.3f}')
+        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
 
 
     # Currently Saving on each epoch, only the best model
-    if running_corrects / len(ds) > best_val_accuracy:
+    if running_corrects / len(ds.dataset) > best_val_accuracy:
         best_val_accuracy = running_corrects / len(ds)
         torch.save(model.state_dict(), conf.model_weights_save)
         tqdm.write(f'Saved weights to: {conf.model_weights_save}')
