@@ -11,6 +11,8 @@ from omegaconf import OmegaConf
 import logging
 import sys
 from pathlib import Path
+import numpy as np
+import os
 
 from models.mobilenetv3 import mobilenetv3_small
 from data_loader.data_loader import UltraMnist
@@ -24,6 +26,18 @@ formatter = logging.Formatter("[%(name)s] [%(levelname)s] %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+
+def seed_everything(seed=1234):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+seed_everything()
+
 
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
