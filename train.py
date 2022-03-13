@@ -15,7 +15,14 @@ from models.mobilenetv3 import mobilenetv3_small
 from data_loader.data_loader import UltraMnist
 
 
-logging.getLogger().setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s] [%(levelname)s] %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -30,13 +37,14 @@ dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=_tran
 num_datapoints = len(dataset)
 # split into train-test
 train_dataset, val_dataset = torch.utils.data.random_split(dataset, [int(0.8 * num_datapoints), num_datapoints - int(0.8 * num_datapoints)])
-train_dataloader = DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers)
+train_dataloader = DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers, pin_memory=True)
 val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers)
 
 
 # ToDo: get weights of the model
 model = mobilenetv3_small().to(device)
 if Path(conf.model_weights_load).exists():
+    logger.info(f'Loaded weights from: {conf.model_weights_load}')
     model.load_state_dict(torch.load(conf.model_weights_load))
     model = model.to(device)
 optimizer = AdamW(model.parameters())
@@ -75,4 +83,6 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
         tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds) :.3f}')
 
 
-torch.save(model.state_dict(), conf.model_weights_save)
+    # Currently Saving on each epoch
+    torch.save(model.state_dict(), conf.model_weights_save)
+    tqdm.write(f'Saved weights to: {conf.model_weights_save}')
