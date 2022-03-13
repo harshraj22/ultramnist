@@ -38,10 +38,19 @@ def get_exp_dir() -> str:
     return dir_name
 
 
-def visualize_integrated_gradients(image_path: str, _transforms, model, n_steps:int = 10):
-    """Runs integrated gradients
+def visualize_integrated_gradients(image_path: str, _transforms: transforms.Compose, model: nn.Module, n_steps:int = 10):
+    """Runs the integrated gradients algorithm on the given image using the passed model.
 
-
+    Parameters
+    ----------
+    image_path : str
+        The path of input image to run the integrated gradients algorithm on.
+    _transforms : transforms.Compose
+        Transforms to be applied to the image before passing into the model.
+    model : nn.Module
+        The model on which to run the integrated gradients algorithm.
+    n_steps : int, optional
+        The number of steps to be used in the integrated gradients algorithm, by default 10
     """
 
     model.eval()
@@ -70,16 +79,16 @@ def visualize_integrated_gradients(image_path: str, _transforms, model, n_steps:
                                 sign='positive',
                                 outlier_perc=1)
 
-    dir = get_exp_dir()
+    dir_name = get_exp_dir()
 
     result[1].set_title(f'Integrated Grad | Model Pred: {pred}')
 
-    result[0].savefig(Path(f'{dir}/result1.jpg'))
-    result[1].figure.savefig(Path(f'{dir}/result2.jpg'))
-    pil_img.save(Path(f'{dir}/input.jpg'))
+    result[0].savefig(Path(f'{dir_name}/result1.jpg'))
+    result[1].figure.savefig(Path(f'{dir_name}/result2.jpg'))
+    pil_img.save(Path(f'{dir_name}/input.jpg'))
 
     # print(type(result[0]), type(result[1]))
-    print(f'Artifacts saved to {dir}')
+    print(f'Artifacts saved to {dir_name}')
 
 
 if __name__ == '__main__':
