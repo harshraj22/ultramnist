@@ -60,7 +60,7 @@ def visualize_integrated_gradients(image_path: str, _transforms: transforms.Comp
 
     out = model(img.unsqueeze(0))
     pred = torch.argmax(out.squeeze(0)).item()
-    conf = torch.max(F.softmax(out.squeeze(0))).item()
+    conf = torch.max(F.softmax(out.squeeze(0), dim=-1)).item()
     # print(F.softmax(out.squeeze(0)))
     print(f'Model predicted: {pred} with conf {conf:.3f}')
 
@@ -104,6 +104,7 @@ if __name__ == '__main__':
 
     _transforms = transforms.Compose([
         transforms.ToTensor(),
+        transforms.Lambda(lambda t: t/255),
         transforms.Resize((2000, 2000))
     ])
 

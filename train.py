@@ -30,15 +30,25 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 # ToDo: Add augmentations
-_transforms = transforms.Compose([
+train_transforms = transforms.Compose([
     transforms.ToTensor(),
+    transforms.Lambda(lambda t: t/255),
+    transforms.RandomRotation(10, expand=True),
     transforms.Resize((2000, 2000))
 ])
 
-dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=_transforms)
+val_transforms = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Lambda(lambda t: t/255),
+    transforms.Resize((2000, 2000))
+])
+
+dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=train_transforms)
 num_datapoints = len(dataset)
 # split into train-test
 train_dataset, val_dataset = torch.utils.data.random_split(dataset, [int(0.8 * num_datapoints), num_datapoints - int(0.8 * num_datapoints)])
+val_dataset.transforms = val_transforms
+
 train_dataloader = DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers)
 val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True, num_workers=conf.num_workers)
 
@@ -47,7 +57,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=Tru
 model = mobilenetv3_small().to(device)
 if Path(conf.model_weights_load).exists():
     logger.info(f'Loaded weights from: {conf.model_weights_load}')
-    model.load_state_dict(torch.load(conf.model_weights_load))
+    model.load_state_dict(torch.load(conf.model_weights_load, map_location=device))
     model = model.to(device)
 optimizer = AdamW(model.parameters())
 # ToDo: Add an LR Schedular
