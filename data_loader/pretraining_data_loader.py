@@ -69,7 +69,7 @@ class PreTrainingDataset(Dataset):
 
         if self.transforms:
             cropped_images = [self.transforms(image) for image in cropped_images]
-        return torch.stack(cropped_images), torch.tensor([rotate_label, flip_label])
+        return torch.stack(cropped_images), torch.tensor(rotate_label), torch.tensor(flip_label)
 
 
 if __name__ == '__main__':
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     n = len(ultramnist_dataset)
     for i in tqdm(range(n), total=n):
         data_point = ultramnist_dataset[i]
-        tqdm.write(f'{data_point[0].shape}, {data_point[1].shape}')
+        tqdm.write(f'{data_point[0].shape}, {data_point[1].shape}, {data_point[2].shape}, {data_point[1].item()},  {data_point[2].item()}')
