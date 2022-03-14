@@ -59,16 +59,17 @@ class PreTrainingDataset(Dataset):
             box = (j, i, j+d, i+d)
             cropped_images.append(image.crop(box))
 
+        rotate_label, flip_label = 0, 0
         # Randomly crop or rotate
         if random.randint(0, 10) <= 6:
             # 60% of the time, rotate
-            cropped_images, label = random_rotate(cropped_images)
+            cropped_images, rotate_label = random_rotate(cropped_images)
         else:
-            cropped_images, label = random_flip(cropped_images)
+            cropped_images, flip_label = random_flip(cropped_images)
 
         if self.transforms:
             cropped_images = [self.transforms(image) for image in cropped_images]
-        return torch.stack(cropped_images), torch.tensor(label)
+        return torch.stack(cropped_images), torch.tensor([rotate_label, flip_label])
 
 
 if __name__ == '__main__':
