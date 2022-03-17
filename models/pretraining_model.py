@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 
-from mobilenetv3 import mobilenetv3_small, h_swish
+# import sys
+# sys.path.append('..')
+from .mobilenetv3 import mobilenetv3_small, h_swish
 
 
 class PreTrainingModel(nn.Module):
