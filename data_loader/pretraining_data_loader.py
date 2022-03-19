@@ -43,7 +43,7 @@ class PreTrainingDataset(Dataset):
 
     def __len__(self):
         # ToDo: iterate on full data
-        return len(self.data) // 5
+        return len(self.data) // 10
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
