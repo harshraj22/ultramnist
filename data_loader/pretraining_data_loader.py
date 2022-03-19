@@ -43,7 +43,7 @@ class PreTrainingDataset(Dataset):
 
     def __len__(self):
         # ToDo: iterate on full data
-        return len(self.data) // 3000
+        return len(self.data) // 5
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
@@ -75,7 +75,8 @@ class PreTrainingDataset(Dataset):
 if __name__ == '__main__':
     conf = OmegaConf.load('../conf/config.yaml')
     _transforms = transforms.Compose([
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Resize((500, 500))
     ])
     ultramnist_dataset = PreTrainingDataset(pd.read_csv(conf.train_csv_path), conf.train_image_dir, transforms=_transforms)
     n = len(ultramnist_dataset)

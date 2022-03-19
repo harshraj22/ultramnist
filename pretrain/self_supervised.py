@@ -53,13 +53,13 @@ train_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
     transforms.RandomRotation(10, expand=True),
-    transforms.Resize((2000, 2000))
+    transforms.Resize((500, 500))
 ])
 
 val_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.Resize((2000, 2000))
+    transforms.Resize((500, 500))
 ])
 
 
@@ -93,51 +93,52 @@ criterian = nn.CrossEntropyLoss()
 # print(f'Type of num_epochs: {type(conf.num_epochs)}')
 best_val_accuracy = 0.0
 
-for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
-    for phase, ds in [('train', train_dataloader), ('val', val_dataloader)]:
-        running_loss, running_corrects = 0, 0
-        if phase == 'train':
-            model.train()
-        else:
-            model.eval()
+if __name__ == '__main__':
+    for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
+        for phase, ds in [('train', train_dataloader), ('val', val_dataloader)]:
+            running_loss, running_corrects = 0, 0
+            if phase == 'train':
+                model.train()
+            else:
+                model.eval()
 
-        with torch.set_grad_enabled(phase=='train'):
-            for batch in tqdm(ds, desc=f'Phase: {phase}'):
-                optimizer.zero_grad()
-                
-                imgs, rotate_labels, flip_labels = batch
-                imgs, rotate_labels, flip_labels = imgs.to(device), rotate_labels.to(device), flip_labels.to(device)
-                imgs = imgs.view(-1, 1, 2000, 2000)
+            with torch.set_grad_enabled(phase=='train'):
+                for batch in tqdm(ds, desc=f'Phase: {phase}'):
+                    optimizer.zero_grad()
+                    
+                    imgs, rotate_labels, flip_labels = batch
+                    imgs, rotate_labels, flip_labels = imgs.to(device), rotate_labels.to(device), flip_labels.to(device)
+                    imgs = imgs.view(-1, 1, 500, 500)
 
-                flip_outs, rotate_outs = model(imgs)
-                # print('\n\n====shapes: ', flip_outs.shape, rotate_outs.shape, '|', imgs.shape, flip_labels.shape, rotate_labels.shape, '|', conf.batch_size, len(batch))
-                flip_outs = flip_outs.view(-1, 4, 2)
-                rotate_outs = rotate_outs.view(-1, 4, 3)
+                    flip_outs, rotate_outs = model(imgs)
+                    # print('\n\n====shapes: ', flip_outs.shape, rotate_outs.shape, '|', imgs.shape, flip_labels.shape, rotate_labels.shape, '|', conf.batch_size, len(batch))
+                    flip_outs = flip_outs.view(-1, 4, 2)
+                    rotate_outs = rotate_outs.view(-1, 4, 3)
 
-                flip_outs = torch.mean(flip_outs, dim=1)
-                rotate_outs = torch.mean(rotate_outs, dim=1)
+                    flip_outs = torch.mean(flip_outs, dim=1)
+                    rotate_outs = torch.mean(rotate_outs, dim=1)
 
-                flip_preds = torch.argmax(flip_outs, dim=1)
-                rotate_preds = torch.argmax(rotate_outs, dim=1)
+                    flip_preds = torch.argmax(flip_outs, dim=1)
+                    rotate_preds = torch.argmax(rotate_outs, dim=1)
 
-                loss = criterian(flip_outs, flip_labels) + criterian(rotate_outs, rotate_labels)
+                    loss = criterian(flip_outs, flip_labels) + criterian(rotate_outs, rotate_labels)
 
-                # tqdm.write(f'shapes: Input: {imgs.shape}, labels: {labels.shape}, outs: {outs.shape}, preds: {preds.shape}')
-                if phase == 'train':
-                    loss.backward()
-                    optimizer.step()
+                    # tqdm.write(f'shapes: Input: {imgs.shape}, labels: {labels.shape}, outs: {outs.shape}, preds: {preds.shape}')
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
 
-                # tqdm.write(f'preds: {preds}, labels: {labels}, matches: {(preds == labels).sum()}')
+                    # tqdm.write(f'preds: {preds}, labels: {labels}, matches: {(preds == labels).sum()}')
 
-                running_loss += loss.item() * len(batch)
-                running_corrects += ((flip_preds == flip_labels).sum() + (rotate_preds == rotate_labels).sum()) / 2.0
-        # Add code for LR Schedular
-        # Log running loss, accuracy
-        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
+                    running_loss += loss.item() * len(batch)
+                    running_corrects += ((flip_preds == flip_labels).sum() + (rotate_preds == rotate_labels).sum()) / 2.0
+            # Add code for LR Schedular
+            # Log running loss, accuracy
+            tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
 
 
-    # Currently Saving on each epoch, only the best model
-    if running_corrects / len(ds.dataset) > best_val_accuracy:
-        best_val_accuracy = running_corrects / len(ds)
-        torch.save(model.state_dict(), conf.model_weights_save)
-        tqdm.write(f'Saved weights to: {conf.model_weights_save}')
+        # Currently Saving on each epoch, only the best model
+        if running_corrects / len(ds.dataset) > best_val_accuracy:
+            best_val_accuracy = running_corrects / len(ds)
+            torch.save(model.state_dict(), conf.model_weights_save)
+            tqdm.write(f'Saved weights to: {conf.model_weights_save}')
