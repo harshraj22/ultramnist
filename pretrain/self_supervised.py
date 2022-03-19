@@ -139,6 +139,6 @@ if __name__ == '__main__':
 
         # Currently Saving on each epoch, only the best model
         if running_corrects / len(ds.dataset) > best_val_accuracy:
-            best_val_accuracy = running_corrects / len(ds)
+            best_val_accuracy = running_corrects / len(ds.dataset)
             torch.save(model.state_dict(), conf.model_weights_save)
             tqdm.write(f'Saved weights to: {conf.model_weights_save}')
