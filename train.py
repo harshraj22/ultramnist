@@ -20,6 +20,9 @@ from sklearn.model_selection import train_test_split
 from models.mobilenetv3 import mobilenetv3_small
 from data_loader.data_loader import UltraMnist
 
+from torch.optim.swa_utils import AveragedModel, SWALR
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -83,11 +86,22 @@ val_dataloader = DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=Tru
 model = mobilenetv3_small().to(device)
 if Path(conf.model_weights_load).exists():
     logger.info(f'Loaded weights from: {conf.model_weights_load}')
-    model.load_state_dict(torch.load(conf.model_weights_load, map_location=device))
+    model.load_state_dict(torch.load(conf.model_weights_load, map_location=device), strict=False)
     model = model.to(device)
+    
+    model.requires_grad_(False)
+    for param in model.classifier.parameters():
+        param.requires_grad_(True)
+
 optimizer = AdamW(model.parameters())
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
+
+
+swa_model = AveragedModel(model)
+scheduler = CosineAnnealingLR(optimizer, T_max=100)
+swa_start = 5
+swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 
 # print(f'Type of num_epochs: {type(conf.num_epochs)}')
 best_val_accuracy = 0.0
@@ -124,8 +138,19 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
         tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
 
 
+    if epoch > swa_start:
+        swa_model.update_parameters(model)
+        swa_scheduler.step()
+    else:
+        scheduler.step()
+
     # Currently Saving on each epoch, only the best model
     if running_corrects / len(ds.dataset) > best_val_accuracy:
         best_val_accuracy = running_corrects / len(ds)
         torch.save(model.state_dict(), conf.model_weights_save)
         tqdm.write(f'Saved weights to: {conf.model_weights_save}')
+
+
+# Update bn statistics for the swa_model at the end
+torch.optim.swa_utils.update_bn(loader, swa_model)
+torch.save(swa_model, f'{conf.model_weights_save.replace(".pth", "__swa.pth")}')
