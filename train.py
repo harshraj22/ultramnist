@@ -89,9 +89,9 @@ if Path(conf.model_weights_load).exists():
     model.load_state_dict(torch.load(conf.model_weights_load, map_location=device), strict=False)
     model = model.to(device)
     
-    model.requires_grad_(False)
-    for param in model.classifier.parameters():
-        param.requires_grad_(True)
+    # model.requires_grad_(False)
+    # for param in model.classifier.parameters():
+    #     param.requires_grad_(True)
 
 optimizer = AdamW(model.parameters())
 # ToDo: Add an LR Schedular
