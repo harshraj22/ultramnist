@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
+from torchvision.models import resnet18
 
 from captum.attr import IntegratedGradients
 from captum.attr import GradientShap
@@ -56,7 +57,7 @@ def visualize_integrated_gradients(image_path: str, _transforms: transforms.Comp
     """
 
     model.eval()
-    pil_img = Image.open(image_path)    
+    pil_img = Image.open(image_path).rotate(90)    
     img = _transforms(pil_img)
 
     out = model(img.unsqueeze(0))
@@ -101,7 +102,7 @@ class PretrainModelWrapper(nn.Module):
         self.model = model
     
     def __call__(self, img):
-        return self.model(img)[0]
+        return self.model(img)[1]
 
 if __name__ == '__main__':
 
@@ -109,8 +110,9 @@ if __name__ == '__main__':
 
     IMAGE_PATH = '/kaggle/input/ultra-mnist/test/aacnxqirre.jpeg'
     # model = mobilenetv3_small()
-    # model.load_state_dict(torch.load(cfgs.model_weights_load, map_location=torch.device('cpu')))
+    # model.load_state_dict(torch.load(cfgs.model_weights_save, map_location=torch.device('cpu')))
 
+    # # model = resnet18(pretrained=True)
     # _transforms = transforms.Compose([
     #     transforms.ToTensor(),
     #     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
@@ -119,6 +121,7 @@ if __name__ == '__main__':
 
     model = PreTrainingModel()
     model.load_state_dict(torch.load('/kaggle/working/ultramnist/weights/model_self_supervised_pretrain_weight.pth', map_location=torch.device('cpu')))
+    model = PretrainModelWrapper(model)
     _transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
@@ -126,6 +129,6 @@ if __name__ == '__main__':
     ])
 
 
-    visualize_integrated_gradients(IMAGE_PATH, _transforms, PretrainModelWrapper(model))
+    visualize_integrated_gradients(IMAGE_PATH, _transforms, model)
 
 
