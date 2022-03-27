@@ -12,18 +12,19 @@ from omegaconf import OmegaConf
 
 
 class UltraMnist(Dataset):
-    def __init__(self, data, image_dir: str, transforms=None):
+    def __init__(self, data, image_dir: str, transforms=None, div_factor=30):
         super(UltraMnist, self).__init__()
 
         self.image_dir = image_dir
 
         self.data = data
         self.transforms = transforms
+        self.div_factor = div_factor
 
     def __len__(self):
         # ToDo: iterate on full data
-        return 5
-        return len(self.data) // 30
+        # return 5
+        return len(self.data) // self.div_factor
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
