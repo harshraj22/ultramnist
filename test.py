@@ -58,7 +58,7 @@ if Path(conf.swa_model_weights).exists():
 print(df.head())
 
 dataset = UltraMnist(df.copy(), conf.test_image_dir, transforms=val_transforms, div_factor=1)
-dl = DataLoader(dataset, batch_size=32)
+dl = DataLoader(dataset, batch_size=46, num_workers=2)
 
 for batch in tqdm(dl, total=len(dl)):
     img, index = batch
