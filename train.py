@@ -50,18 +50,19 @@ def seed_everything(seed):
 seed_everything(conf.seed)
 
 
+FINAL_IMG_SIZE = 500
 # ToDo: Add augmentations
 train_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
     transforms.RandomRotation(10, expand=True),
-    transforms.Resize((2000, 2000))
+    transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
 ])
 
 val_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.Resize((2000, 2000))
+    transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
 ])
 
 
@@ -151,6 +152,10 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
         tqdm.write(f'Saved weights to: {conf.model_weights_save}')
 
 
+# https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
 # Update bn statistics for the swa_model at the end
-torch.optim.swa_utils.update_bn(loader, swa_model)
+torch.optim.swa_utils.update_bn(train_dataloader, swa_model)
 torch.save(swa_model, f'{conf.model_weights_save.replace(".pth", "__swa.pth")}')
+
+# # Use swa_model to make predictions on test data 
+# preds = swa_model(test_input)

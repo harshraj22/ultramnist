@@ -22,7 +22,8 @@ class UltraMnist(Dataset):
 
     def __len__(self):
         # ToDo: iterate on full data
-        return len(self.data) // 10
+        return 5
+        return len(self.data) // 30
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
