@@ -29,3 +29,11 @@ my code for [ultra mnist](https://www.kaggle.com/c/ultra-mnist) challenge on kag
     ├── model_weight.pth
     └── model_weight.pth.dvc
 ```
+
+
+## Checks for Training from scratch:
+- [x] Overfits one batch
+- [x] All weights are getting changed
+- [x] Didn't forget to call `optimizer.zero_grad( )`
+- [x] No Mixing of training and testing data
+
