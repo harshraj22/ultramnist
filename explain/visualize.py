@@ -22,6 +22,7 @@ import os
 import sys
 sys.path.append('..')
 from models.mobilenetv3 import mobilenetv3_small
+from models.pretraining_model import PreTrainingModel
 
 
 def get_exp_dir() -> str:
@@ -94,20 +95,37 @@ def visualize_integrated_gradients(image_path: str, _transforms: transforms.Comp
     print(f'Artifacts saved to {dir_name}')
 
 
+class PretrainModelWrapper(nn.Module):
+    def __init__(self, model):
+        super(PretrainModelWrapper, self).__init__()
+        self.model = model
+    
+    def __call__(self, img):
+        return self.model(img)[0]
+
 if __name__ == '__main__':
 
     cfgs = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 
-    IMAGE_PATH = '/kaggle/input/ultra-mnist/train/zzvjljhlij.jpeg'
-    model = mobilenetv3_small()
-    model.load_state_dict(torch.load(cfgs.model_weights_load, map_location=torch.device('cpu')))
+    IMAGE_PATH = '/kaggle/input/ultra-mnist/test/aacnxqirre.jpeg'
+    # model = mobilenetv3_small()
+    # model.load_state_dict(torch.load(cfgs.model_weights_load, map_location=torch.device('cpu')))
 
+    # _transforms = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
+    #     transforms.Resize((2000, 2000))
+    # ])
+
+    model = PreTrainingModel()
+    model.load_state_dict(torch.load('/kaggle/working/ultramnist/weights/model_self_supervised_pretrain_weight.pth', map_location=torch.device('cpu')))
     _transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-        transforms.Resize((2000, 2000))
+        transforms.Resize((500, 500))
     ])
 
-    visualize_integrated_gradients(IMAGE_PATH, _transforms, model)
+
+    visualize_integrated_gradients(IMAGE_PATH, _transforms, PretrainModelWrapper(model))
 
 
