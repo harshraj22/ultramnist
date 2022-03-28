@@ -42,12 +42,10 @@ class PreTrainingDataset(Dataset):
         self.transforms = transforms
 
     def __len__(self):
-        # ToDo: iterate on full data
-        return len(self.data) // 10
+        return len(self.data) 
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
-        # ToDo: remove conversion to RGB, modify model
         image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')) #.convert('RGB')
         w, h = image.size
         d = 2000 # num of splits per width and height

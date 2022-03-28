@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 
 
 class UltraMnist(Dataset):
-    def __init__(self, data, image_dir: str, transforms=None, div_factor=30):
+    def __init__(self, data, image_dir: str, transforms=None, div_factor=1):
         super(UltraMnist, self).__init__()
 
         self.image_dir = image_dir
@@ -22,13 +22,10 @@ class UltraMnist(Dataset):
         self.div_factor = div_factor
 
     def __len__(self):
-        # ToDo: iterate on full data
-        # return 5
         return len(self.data) // self.div_factor
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
-        # ToDo: remove conversion to RGB, modify model
         image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')) #.convert('RGB')
         if self.transforms:
             image = self.transforms(image)
