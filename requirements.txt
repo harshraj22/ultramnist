@@ -1,5 +1,3 @@
 omegaconf
-dvc
-dvc[gdrive]
 captum
 wandb
