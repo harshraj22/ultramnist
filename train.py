@@ -74,7 +74,7 @@ df = df.sample(frac=1, random_state=conf.seed).reset_index(drop=True)
 train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False, random_state=conf.seed)
 val_df.reset_index(drop=True, inplace=True)
 
-train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms)
+train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms, div_factor=1)
 val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms)
 # dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=train_transforms)
 # num_datapoints = len(dataset)
@@ -103,7 +103,8 @@ criterian = nn.CrossEntropyLoss()
 
 
 swa_model = AveragedModel(model)
-scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True)
+scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True, eta_min=4e-5)
+# scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=5, mode="triangular2")
 swa_start = 1
 swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 
@@ -154,14 +155,14 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
 
     # Currently Saving on each epoch, only the best model
     if running_corrects / len(ds.dataset) > best_val_accuracy:
-        best_val_accuracy = running_corrects / len(ds)
+        best_val_accuracy = running_corrects / len(ds.dataset)
         torch.save(model.state_dict(), conf.model_weights_save)
         tqdm.write(f'Saved weights to: {conf.model_weights_save}')
 
 
 # https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
 # Update bn statistics for the swa_model at the end
-torch.optim.swa_utils.update_bn(train_dataloader, swa_model.cpu())
+torch.optim.swa_utils.update_bn(train_dataloader, swa_model, device=device)
 torch.save(swa_model.state_dict(), f'{conf.swa_model_weights}')
 
 # # Use swa_model to make predictions on test data 

@@ -58,7 +58,7 @@ if Path(conf.swa_model_weights).exists():
 print(df.head())
 
 dataset = UltraMnist(df.copy(), conf.test_image_dir, transforms=val_transforms, div_factor=1)
-dl = DataLoader(dataset, batch_size=46, num_workers=2)
+dl = DataLoader(dataset, batch_size=94, num_workers=2)
 
 for batch in tqdm(dl, total=len(dl)):
     img, index = batch
@@ -67,7 +67,6 @@ for batch in tqdm(dl, total=len(dl)):
     pred = torch.argmax(out, dim=1)
 
     df.at[index.numpy(), 'digit_sum'] = pred.cpu().numpy()
-    # df.at[index, ]
 
 print(df.head())
 df.to_csv('preds.csv', index=False)
