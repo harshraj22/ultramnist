@@ -24,6 +24,16 @@ from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s] [%(levelname)s] %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -57,16 +67,20 @@ if Path(conf.swa_model_weights).exists():
 
 print(df.head())
 
+model.eval()
+swa_model.eval()
+
 dataset = UltraMnist(df.copy(), conf.test_image_dir, transforms=val_transforms, div_factor=1)
 dl = DataLoader(dataset, batch_size=94, num_workers=2)
 
-for batch in tqdm(dl, total=len(dl)):
-    img, index = batch
-    # img = val_transforms(img).to(device)
-    out = swa_model(img.to(device))
-    pred = torch.argmax(out, dim=1)
+with torch.no_grad():
+    for batch in tqdm(dl, total=len(dl)):
+        img, index = batch
+        # img = val_transforms(img).to(device)
+        out = model(img.to(device))
+        pred = torch.argmax(out, dim=1)
 
-    df.at[index.numpy(), 'digit_sum'] = pred.cpu().numpy()
+        df.at[index.numpy(), 'digit_sum'] = pred.cpu().numpy()
 
 print(df.head())
 df.to_csv('preds.csv', index=False)

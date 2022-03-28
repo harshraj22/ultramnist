@@ -22,7 +22,7 @@ from models.mobilenetv3 import mobilenetv3_small
 from data_loader.data_loader import UltraMnist
 
 from torch.optim.swa_utils import AveragedModel, SWALR
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
 
 
 logger = logging.getLogger(__name__)
@@ -103,10 +103,11 @@ criterian = nn.CrossEntropyLoss()
 
 
 swa_model = AveragedModel(model)
-scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True, eta_min=4e-5)
-# scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=5, mode="triangular2")
+# scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True, eta_min=4e-5)
+# scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=3, mode="triangular2")
+scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5)
 swa_start = 1
-swa_scheduler = SWALR(optimizer, swa_lr=0.05)
+# swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 
 # print(f'Type of num_epochs: {type(conf.num_epochs)}')
 best_val_accuracy = 0.0
@@ -140,18 +141,18 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
                 running_corrects += (preds == labels).sum()
         # Add code for LR Schedular
         # Log running loss, accuracy
-        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f} | LR: {scheduler.get_last_lr()[-1]:.5f}')
+        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f} | LR: {optimizer.param_groups[0]["lr"]:.5f}')
         wandb.log({
             f'{phase}/Loss': round(running_loss, 3),
             f'{phase}/Acc': round(running_corrects.item() / len(ds.dataset), 3),
-            f'{phase}/LR': round(scheduler.get_last_lr()[-1], 6)
-        })
+            f'{phase}/LR': round(optimizer.param_groups[0]['lr'], 6)
+        }, commit=bool(phase=='val'))
 
-    if epoch > swa_start:
+    if epoch > swa_start and False:
         swa_model.update_parameters(model)
-        swa_scheduler.step()
+        # swa_scheduler.step()
     else:
-        scheduler.step()
+        scheduler.step(loss.item())
 
     # Currently Saving on each epoch, only the best model
     if running_corrects / len(ds.dataset) > best_val_accuracy:
@@ -162,8 +163,8 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
 
 # https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
 # Update bn statistics for the swa_model at the end
-torch.optim.swa_utils.update_bn(train_dataloader, swa_model, device=device)
-torch.save(swa_model.state_dict(), f'{conf.swa_model_weights}')
+# torch.optim.swa_utils.update_bn(train_dataloader, swa_model, device=device)
+# torch.save(swa_model.state_dict(), f'{conf.swa_model_weights}')
 
 # # Use swa_model to make predictions on test data 
 # preds = swa_model(test_input)

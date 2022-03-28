@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torchvision import transforms
 from torchvision.models import resnet18
 
+from torch.optim.swa_utils import AveragedModel, SWALR
+
 from captum.attr import IntegratedGradients
 from captum.attr import GradientShap
 from captum.attr import Occlusion
@@ -107,10 +109,16 @@ class PretrainModelWrapper(nn.Module):
 if __name__ == '__main__':
 
     cfgs = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     IMAGE_PATH = '/kaggle/input/ultra-mnist/test/aacnxqirre.jpeg'
-    # model = mobilenetv3_small()
-    # model.load_state_dict(torch.load(cfgs.model_weights_save, map_location=torch.device('cpu')))
+    model = mobilenetv3_small()
+    model.load_state_dict(torch.load(cfgs.model_weights_save, map_location=device))
+
+    # swa_model = AveragedModel(model)
+    # if Path(cfgs.swa_model_weights).exists():
+    #     swa_model.load_state_dict(torch.load(cfgs.swa_model_weights, map_location=device))
+    #     swa_model = swa_model.to(device)
 
     # # model = resnet18(pretrained=True)
     # _transforms = transforms.Compose([
@@ -119,9 +127,9 @@ if __name__ == '__main__':
     #     transforms.Resize((2000, 2000))
     # ])
 
-    model = PreTrainingModel()
-    model.load_state_dict(torch.load('/kaggle/working/ultramnist/weights/model_self_supervised_pretrain_weight.pth', map_location=torch.device('cpu')))
-    model = PretrainModelWrapper(model)
+    # model = PreTrainingModel()
+    # model.load_state_dict(torch.load('/kaggle/working/ultramnist/weights/model_self_supervised_pretrain_weight.pth', map_location=torch.device('cpu')))
+    # model = PretrainModelWrapper(model)
     _transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
