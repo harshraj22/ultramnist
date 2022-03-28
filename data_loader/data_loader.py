@@ -37,7 +37,7 @@ if __name__ == '__main__':
     _transforms = transforms.Compose([
         transforms.ToTensor()
     ])
-    ultramnist_dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=_transforms)
+    ultramnist_dataset = UltraMnist(pd.read_csv(conf.train_csv_path), conf.train_image_dir, transforms=_transforms)
     n = len(ultramnist_dataset)
     for i in tqdm(range(n), total=n):
         data_point = ultramnist_dataset[i]
