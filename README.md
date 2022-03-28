@@ -1,5 +1,5 @@
 # ultramnist
-my code for [ultra mnist](https://www.kaggle.com/c/ultra-mnist) challenge on kaggle
+my code for [ultra mnist](https://www.kaggle.com/c/ultra-mnist) challenge on kaggle. Training-Val plots [here](https://wandb.ai/harshraj22/ultramnist?workspace=user-harshraj22)
 
 
 
