@@ -1,11 +1,11 @@
 train_csv_path: /kaggle/input/ultra-mnist/train.csv
 test_csv_path: /kaggle/input/ultra-mnist/sample_submission.csv
-train_image_dir: /kaggle/input/ultramnist1000px/train
+train_image_dir: /kaggle/input/ultramnist500px/train
 test_image_dir: /kaggle/input/ultramnist500px/test
 model_weights_load: /kaggle/working/ultramnist/weights/model_weights_500.pth
 model_weights_save: /kaggle/working/ultramnist/weights/nofile.pth
 swa_model_weights: /kaggle/working/ultramnist/weights/swa_model_weights_500.pth
 batch_size: 74
-num_epochs: 2
+num_epochs: 20
 num_workers: 2
 seed: 1234

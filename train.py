@@ -39,7 +39,7 @@ logger.propagate = False
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-wandb.init(project='ultramnist', mode='online')
+wandb.init(project='ultramnist', mode='online', resume=True)
 
 
 def seed_everything(seed):
@@ -97,7 +97,7 @@ if Path(conf.model_weights_load).exists():
     # for param in model.classifier.parameters():
     #     param.requires_grad_(True)
 
-optimizer = AdamW(model.parameters())
+optimizer = AdamW(model.parameters(), lr=7e-3)
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
 
@@ -105,7 +105,7 @@ criterian = nn.CrossEntropyLoss()
 swa_model = AveragedModel(model)
 # scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True, eta_min=4e-5)
 # scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=3, mode="triangular2")
-scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5)
+scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5, patience=4)
 swa_start = 1
 # swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 
@@ -168,3 +168,10 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
 
 # # Use swa_model to make predictions on test data 
 # preds = swa_model(test_input)
+
+
+"""
+>>> model.requires_grad = False
+>>> import torch.nn as nn
+>>> model.features[0][0] = nn.Conv2d(1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+"""

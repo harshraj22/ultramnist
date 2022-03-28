@@ -9,6 +9,7 @@ arXiv preprint arXiv:1905.02244.
 
 import torch.nn as nn
 import math
+from torchvision.models.mobilenetv3 import mobilenet_v3_small
 
 
 __all__ = ['mobilenetv3_large', 'mobilenetv3_small']
@@ -210,7 +211,7 @@ def mobilenetv3_large(**kwargs):
     return MobileNetV3(cfgs, mode='large', **kwargs)
 
 
-def mobilenetv3_small(**kwargs):
+def mobilenetv3_small_old(**kwargs):
     """
     Constructs a MobileNetV3-Small model
     """
@@ -231,3 +232,13 @@ def mobilenetv3_small(**kwargs):
 
     return MobileNetV3(cfgs, mode='small', **kwargs)
 
+
+def mobilenetv3_small(num_classes=28):
+    model = mobilenet_v3_small(pretrained=True)
+    model.features[0][0] = nn.Conv2d(1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+    return nn.Sequential(
+        model,
+        nn.Hardswish(inplace=True),
+        nn.Dropout(p=0.2, inplace=True),
+        nn.Linear(1000, num_classes),
+    )
