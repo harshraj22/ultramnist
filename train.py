@@ -39,7 +39,7 @@ logger.propagate = False
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-wandb.init(project='ultramnist', mode='online', resume=True)
+wandb.init(project='ultramnist', mode='online', resume=False)
 
 
 def seed_everything(seed):
