@@ -4,3 +4,4 @@
 # weights/**.pth
 install.sh
 **.ipynb
+**/wandb/**

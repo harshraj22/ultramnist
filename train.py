@@ -15,6 +15,7 @@ import numpy as np
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import wandb
 
 
 from models.mobilenetv3 import mobilenetv3_small
@@ -37,6 +38,8 @@ logger.propagate = False
 
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+wandb.init(project='ultramnist', mode='online')
 
 
 def seed_everything(seed):
@@ -100,7 +103,7 @@ criterian = nn.CrossEntropyLoss()
 
 
 swa_model = AveragedModel(model)
-scheduler = CosineAnnealingLR(optimizer, T_max=100)
+scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True)
 swa_start = 1
 swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 
@@ -136,8 +139,12 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
                 running_corrects += (preds == labels).sum()
         # Add code for LR Schedular
         # Log running loss, accuracy
-        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
-
+        tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f} | LR: {scheduler.get_last_lr()[-1]:.5f}')
+        wandb.log({
+            f'{phase}/Loss': round(running_loss, 3),
+            f'{phase}/Acc': round(running_corrects.item() / len(ds.dataset), 3),
+            f'{phase}/LR': round(scheduler.get_last_lr()[-1], 6)
+        })
 
     if epoch > swa_start:
         swa_model.update_parameters(model)
@@ -155,7 +162,7 @@ for epoch in tqdm(range(conf.num_epochs), total=conf.num_epochs):
 # https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
 # Update bn statistics for the swa_model at the end
 torch.optim.swa_utils.update_bn(train_dataloader, swa_model.cpu())
-torch.save(swa_model.state_dict(), f'{conf.model_weights_save.replace(".pth", "__swa.pth")}')
+torch.save(swa_model.state_dict(), f'{conf.swa_model_weights}')
 
 # # Use swa_model to make predictions on test data 
 # preds = swa_model(test_input)
