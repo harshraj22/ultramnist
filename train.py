@@ -39,7 +39,7 @@ logger.propagate = False
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-wandb.init(project='ultramnist', mode='online', resume=False)
+wandb.init(project='ultramnist', mode='disabled', resume=False)
 
 
 def seed_everything(seed):
@@ -58,14 +58,14 @@ FINAL_IMG_SIZE = 500
 train_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.RandomRotation(10, expand=True),
-    transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
+    transforms.RandomRotation(10, expand=False),
+    # transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
 ])
 
 val_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
+    # transforms.Resize((FINAL_IMG_SIZE, FINAL_IMG_SIZE))
 ])
 
 
@@ -74,8 +74,8 @@ df = df.sample(frac=1, random_state=conf.seed).reset_index(drop=True)
 train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False, random_state=conf.seed)
 val_df.reset_index(drop=True, inplace=True)
 
-train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms, div_factor=1)
-val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms)
+train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms, div_factor=50)
+val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms, div_factor=10)
 # dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=train_transforms)
 # num_datapoints = len(dataset)
 # # split into train-test
@@ -93,9 +93,18 @@ if Path(conf.model_weights_load).exists():
     model.load_state_dict(torch.load(conf.model_weights_load, map_location=device), strict=False)
     model = model.to(device)
     
-    # model.requires_grad_(False)
-    # for param in model.classifier.parameters():
-    #     param.requires_grad_(True)
+    for param in model.parameters():
+        param.requires_grad = False
+
+    for param in model[0].classifier.parameters():
+        param.requires_grad_(True)
+    
+    for param in model[1:].parameters():
+        param.requires_grad = True
+
+# for name, param in model.named_parameters():
+#     if param.requires_grad:
+#         print(name)
 
 optimizer = AdamW(model.parameters(), lr=7e-3)
 # ToDo: Add an LR Schedular
@@ -105,7 +114,7 @@ criterian = nn.CrossEntropyLoss()
 swa_model = AveragedModel(model)
 # scheduler = CosineAnnealingLR(optimizer, T_max=100, verbose=True, eta_min=4e-5)
 # scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=3, mode="triangular2")
-scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5, patience=4)
+scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5, patience=2, factor=0.6, verbose=True)
 swa_start = 1
 # swa_scheduler = SWALR(optimizer, swa_lr=0.05)
 

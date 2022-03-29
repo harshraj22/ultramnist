@@ -241,10 +241,14 @@ def mobilenetv3_small(num_classes=28):
     model.features[0][0].weight = nn.Parameter(old.weight[:,:1])
 
     _last = model.classifier[-1]
+    # model.requires_grad = False
+
     model.classifier[-1] = nn.Sequential(
         nn.BatchNorm1d(1024),
         _last
     )
+
+    # model.classifier.requires_grad = True
 
     return nn.Sequential(
         model,
