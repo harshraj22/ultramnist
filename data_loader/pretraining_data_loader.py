@@ -42,20 +42,26 @@ class PreTrainingDataset(Dataset):
         self.transforms = transforms
 
     def __len__(self):
-        return len(self.data) 
+        return len(self.data) // 300
 
     def __getitem__(self, id):
         image_id, label = self.data.loc[id]
-        image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')) #.convert('RGB')
-        w, h = image.size
+        # image = Image.open(Path(f'{self.image_dir}/{image_id}.jpeg')) #.convert('RGB')
+        # w, h = image.size
         d = 2000 # num of splits per width and height
-        cropped_images = []
+        cropped_images = [
+            Image.open(Path(f'{self.image_dir}/{image_id}_0.jpeg')),
+            Image.open(Path(f'{self.image_dir}/{image_id}_1.jpeg')),
+            Image.open(Path(f'{self.image_dir}/{image_id}_2.jpeg')),
+            Image.open(Path(f'{self.image_dir}/{image_id}_3.jpeg'))
+        ]
+
 
         # Crop image into 4 equal parts
-        grid = product(range(0, h-h%d, d), range(0, w-w%d, d))
-        for i, j in grid:
-            box = (j, i, j+d, i+d)
-            cropped_images.append(image.crop(box))
+        # grid = product(range(0, h-h%d, d), range(0, w-w%d, d))
+        # for i, j in grid:
+        #     box = (j, i, j+d, i+d)
+        #     cropped_images.append(image.crop(box))
 
         rotate_label, flip_label = 0, 0
         # Randomly crop or rotate

@@ -10,8 +10,8 @@ class PreTrainingModel(nn.Module):
     def __init__(self):
         super(PreTrainingModel, self).__init__()
 
-        self.model = mobilenetv3_small()
-        self.model.classifier = nn.Sequential()
+        self.model = mobilenetv3_small(num_classes=576)
+        # self.model.classifier = nn.Sequential()
         self.flip_label_head = nn.Sequential(
             nn.Linear(576, 200),
             h_swish(),

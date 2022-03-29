@@ -239,6 +239,13 @@ def mobilenetv3_small(num_classes=28):
     model.features[0][0] = nn.Conv2d(1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
     # https://discuss.pytorch.org/t/how-to-transfer-the-pretrained-weights-for-a-standard-resnet50-to-a-4-channel/52252
     model.features[0][0].weight = nn.Parameter(old.weight[:,:1])
+
+    _last = model.classifier[-1]
+    model.classifier[-1] = nn.Sequential(
+        nn.BatchNorm1d(1024),
+        _last
+    )
+
     return nn.Sequential(
         model,
         nn.Hardswish(inplace=True),

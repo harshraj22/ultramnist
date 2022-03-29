@@ -14,12 +14,15 @@ from pathlib import Path
 import numpy as np
 import os
 import pandas as pd
+import wandb
 from sklearn.model_selection import train_test_split
 
 sys.path.append('..')
 
 from models.pretraining_model import PreTrainingModel
 from data_loader.pretraining_data_loader import PreTrainingDataset
+from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau
+
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +39,7 @@ logger.propagate = False
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+wandb.init(project='ultramnist', mode='disabled', resume=False)
 
 def seed_everything(seed):
     random.seed(seed)
@@ -52,14 +56,14 @@ seed_everything(conf.seed)
 train_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.RandomRotation(10, expand=True),
-    transforms.Resize((500, 500))
+    transforms.RandomRotation(10, expand=False),
+    # transforms.Resize((500, 500))
 ])
 
 val_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.1307,), std = (0.3081,)),
-    transforms.Resize((500, 500))
+    # transforms.Resize((500, 500))
 ])
 
 
@@ -86,9 +90,11 @@ if Path(conf.model_weights_load).exists():
     logger.info(f'Loaded weights from: {conf.model_weights_load}')
     model.load_state_dict(torch.load(conf.model_weights_load, map_location=device))
     model = model.to(device)
-optimizer = AdamW(model.parameters())
+optimizer = AdamW(model.parameters(), lr=4e-3)
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
+scheduler = ReduceLROnPlateau(optimizer, min_lr=4e-5, patience=4)
+
 
 # print(f'Type of num_epochs: {type(conf.num_epochs)}')
 best_val_accuracy = 0.0
@@ -135,6 +141,13 @@ if __name__ == '__main__':
             # Add code for LR Schedular
             # Log running loss, accuracy
             tqdm.write(f'phase: [{phase}] | Loss: {running_loss:.3f} | Acc: {running_corrects / len(ds.dataset) :.3f}')
+            wandb.log({
+                f'self_sup/{phase}/Loss': round(running_loss, 3),
+                f'self_sup/{phase}/Acc': round(running_corrects.item() / len(ds.dataset), 3),
+                f'self_sup/{phase}/LR': round(optimizer.param_groups[0]['lr'], 6)
+            }, commit=bool(phase=='val'))
+        
+        scheduler.step(loss.item())
 
 
         # Currently Saving on each epoch, only the best model
