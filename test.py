@@ -62,7 +62,7 @@ if Path(conf.model_weights_load).exists():
     
 swa_model = AveragedModel(model)
 if Path(conf.swa_model_weights).exists():
-    swa_model.load_state_dict(torch.load(conf.swa_model_weights, map_location=device))
+    # swa_model.load_state_dict(torch.load(conf.swa_model_weights, map_location=device))
     swa_model = swa_model.to(device)
 
 print(df.head())

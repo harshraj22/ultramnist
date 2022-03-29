@@ -39,7 +39,7 @@ logger.propagate = False
 conf = OmegaConf.load('/kaggle/working/ultramnist/conf/config.yaml')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-wandb.init(project='ultramnist', mode='disabled', resume=False)
+wandb.init(project='ultramnist', mode='online', resume=False)
 
 
 def seed_everything(seed):
@@ -74,8 +74,8 @@ df = df.sample(frac=1, random_state=conf.seed).reset_index(drop=True)
 train_df, val_df = train_test_split(df, test_size=0.2, shuffle=False, random_state=conf.seed)
 val_df.reset_index(drop=True, inplace=True)
 
-train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms, div_factor=50)
-val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms, div_factor=10)
+train_dataset = UltraMnist(train_df, conf.train_image_dir, transforms=train_transforms, div_factor=1)
+val_dataset = UltraMnist(val_df, conf.train_image_dir, transforms=val_transforms, div_factor=1)
 # dataset = UltraMnist(conf.train_csv_path, conf.train_image_dir, transforms=train_transforms)
 # num_datapoints = len(dataset)
 # # split into train-test
@@ -96,8 +96,11 @@ if Path(conf.model_weights_load).exists():
     for param in model.parameters():
         param.requires_grad = False
 
-    for param in model[0].classifier.parameters():
-        param.requires_grad_(True)
+    # for param in model[0].features[-1]:
+    #     param.requires_grad = True
+
+    # for param in model[0].classifier.parameters():
+    #     param.requires_grad_(True)
     
     for param in model[1:].parameters():
         param.requires_grad = True
@@ -106,7 +109,8 @@ if Path(conf.model_weights_load).exists():
 #     if param.requires_grad:
 #         print(name)
 
-optimizer = AdamW(model.parameters(), lr=7e-3)
+optimizer = AdamW([{'params': model[0].features[-1].parameters(), 'lr': 1e-3}, {'params': model[1:].parameters()}], lr=7e-3)
+
 # ToDo: Add an LR Schedular
 criterian = nn.CrossEntropyLoss()
 
