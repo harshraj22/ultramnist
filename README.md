@@ -5,7 +5,7 @@ my code for [ultra mnist](https://www.kaggle.com/c/ultra-mnist) challenge on kag
 It does not work yet, and now I am too lazy to debug. 
 
 ## Innovation:
-Tried to pretrain model on task to predict rotation, flipping. 4000px image was cropped into 4 1000px images, and one sample of dataset contained 4 images. See pretrain directory for more details.
+Tried to pretrain model on task to predict rotation, flipping. The idea was to teach the model to understand what to look for in the images (the digits in this case). 4000px image was cropped into 4 1000px images, and one sample of dataset contained 4 images. The pretained model would give a good set of weights for feature extraction trained on a simple task. We would then use this network for the more difficult task of classification of digits sum. See pretrain directory for more details.
 
 
 ### Directory Structure:
