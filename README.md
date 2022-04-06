@@ -1,6 +1,11 @@
 # ultramnist
 my code for [ultra mnist](https://www.kaggle.com/c/ultra-mnist) challenge on kaggle. Training-Val plots [here](https://wandb.ai/harshraj22/ultramnist?workspace=user-harshraj22)
 
+## Note:
+It does not work yet, and now I am too lazy to debug. 
+
+## Innovation:
+Tried to pretrain model on task to predict rotation, flipping. 4000px image was cropped into 4 1000px images, and one sample of dataset contained 4 images. See pretrain directory for more details.
 
 
 ### Directory Structure:
